@@ -7,6 +7,9 @@
 		"abc"
 	];
 
+	lstVersionTypes = "releases,snapshots,rc,beta";
+	lstVersionExtensionTypes = "release,abc,snapshot";
+
 	param name="url.type" default="releases";
 	url.type = !arrayFind(aryValidTypes, url.type) ? "releases" : url.type;
 
@@ -343,7 +346,6 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 		<link href="/res/download.css" rel="stylesheet">
-
 		<script src="/res/download.js" defer></script>
 
 		<script type="text/javascript">
@@ -547,50 +549,49 @@
 			<p style="font-size: 1.6rem;">Commandbox Lucee engines/releases are listed at <a href="https://www.forgebox.io/view/lucee">Forgebox</a></p>
 
 			<cfset rows = {}>
-			<cfset types="releases,snapshots,rc,beta">
-			<cfset _versions={}>
+			<cfset _versions = {}>
 
 			<div class="panel" id="core">
 				<div class="panel-body">
-					<cfloop list="releases,snapshots,rc,beta" item="_type">
-						<cfset _versions[_type] = []>
+					<cfloop list="#lstVersionTypes#" item="versiontype">
+						<cfset _versions[versiontype] = []>
 						<div class="col-md-3 col-sm-3 col-xs-3">
 							<!--- dropDown --->
 							<div class="bg-primary BoxWidth text-white">
 
-								<cfif !structKeyEXists(url,_type)>
+								<cfif !structKeyExists(url, versiontype)>
 									<cfloop struct="#versions#" index="vs" item="data">
-										<cfif data.type != _type>
+										<cfif data.type != versiontype>
 											<cfcontinue>
 										</cfif>
-										<cfset url[_type]=vs>
-										<cfset rows[_type]=vs>
+										<cfset url[versiontype]=vs>
+										<cfset rows[versiontype]=vs>
 										<cfbreak>
 									</cfloop>
 								</cfif>
 
-								<h2><b>#stcLang.singular[_type]#</b></h2>
-								<select onchange="change('#_type#',this, 'core')" style="color:##7f8c8d;font-style:normal;" id="lCore" class="form-control">
+								<h2><b>#stcLang.singular[versiontype]#</b></h2>
+								<select onchange="change('#versiontype#',this, 'core')" style="color:##7f8c8d;font-style:normal;" id="lCore" class="form-control">
 									<cfloop struct="#versions#" index="vs" item="data">
 										<cfif vs == "05.003.007.0044.100"
-											OR data.type != _type>
+											OR data.type != versiontype>
 											<cfcontinue>
 										</cfif>
 
-										<cfset isSelected = url[_type] == vs ? true : false>
+										<cfset isSelected = url[versiontype] == vs ? true : false>
 
 										<cfif isSelected>
-											<cfset rows[_type] = vs>
+											<cfset rows[versiontype] = vs>
 										</cfif>
 
-										<cfset arrayAppend(_versions[_type], data.version)>
+										<cfset arrayAppend(_versions[versiontype], data.version)>
 
 										<option value="#vs#"#isSelected ? ' selected="selected"' : ''#>#data.versionNoAppendix#</option>
 									</cfloop>
 								</select>
 							</div>
 
-							<cfset dw = versions[rows[_type]]>
+							<cfset dw = versions[rows[versiontype]]>
 
 							<!--- desc --->
 							<div class="desc descDiv row_even">
@@ -599,7 +600,7 @@
 								<cfif len(res)>
 									<span style="font-size:12px">(#res#)</span>
 								</cfif><br><br>
-								#stcLang.desc[_type]#
+								#stcLang.desc[versiontype]#
 							</div>
 							
 							<!--- Express --->
@@ -618,7 +619,7 @@
 
 							<!--- Installer --->
 							<div class="row_even installerDiv">
-								<cfif _type == "releases">
+								<cfif versiontype == "releases">
 									<cfif !structKeyExists(dw,"win")
 										and !structKeyExists(dw,"lin32")
 										and !structKeyExists(dw,"lin64")>
@@ -725,11 +726,11 @@
 							<div class="row_even divHeight">
 
 								<cfscript>
-									loop array=_versions[_type] item="vv" index="i"{
+									loop array=_versions[versiontype] item="vv" index="i"{
 										if(vv != dw.version ) {
 											continue;
 										}
-										prevVersion=arrayIndexExists(_versions[_type],i+1)?_versions[_type][i+1]:"0.0.0.0";
+										prevVersion=arrayIndexExists(_versions[versiontype],i+1)?_versions[versiontype][i+1]:"0.0.0.0";
 									}
 
 									changelog = getChangelog(prevVersion,dw.version);
@@ -741,9 +742,9 @@
 
 								<cfif isstruct(changelog) && structCount(changelog) GT 0>
 									<div class="fontStyle">
-										<p class="collapsed mb-0" data-toggle="modal" data-target="##myModal#_type#">Changelog<small class="align-middle h6 mb-0 ml-1"><i class="icon icon-collapse collapsed"></i></small></p>
+										<p class="collapsed mb-0" data-toggle="modal" data-target="##myModal#versiontype#">Changelog<small class="align-middle h6 mb-0 ml-1"><i class="icon icon-collapse collapsed"></i></small></p>
 									</div>
-									<div class="modal fade" id="myModal#_type#" role="dialog">
+									<div class="modal fade" id="myModal#versiontype#" role="dialog">
 										<div class="modal-dialog modal-lg">
 											<div class="modal-content">
 												<div class="modal-header">
@@ -825,24 +826,25 @@
 									<!--- downloads --->
 									<div class="row">
 										<!--- call extractVersions function once per extension rather than three times --->
-										<cfset exts=extractVersions(extQry)>
-										<cfloop list="release,abc,snapshot" item="type">
-											<cfif NOT structCount(exts[type])>
+										<cfset exts = extractVersions(extQry)>
+
+										<cfloop list="#lstVersionExtensionTypes#" item="versiontype">
+											<cfif NOT structCount(exts[versiontype])>
 												<cfcontinue>
 											</cfif>
 
 											<div class="mb-0 mt-1 col-xs-4 col-md-4 borderInfo">
 												<div class="bg-primary jumbotron text-white jumboStyle">
 													<span class="btn-primary">
-														<h2 class="fontSize">#stcLang.multi[type]#</h2>
+														<h2 class="fontSize">#stcLang.multi[versiontype]#</h2>
 													</span>
 												</div>
 
 												<cfset ind=0>
 												<cfset uid="">
-												<cfset cnt=structCount(exts[type])>
+												<cfset cnt=structCount(exts[versiontype])>
 
-												<cfloop struct="#exts[type]#" index="ver" item="el">
+												<cfloop struct="#exts[versiontype]#" index="ver" item="el">
 													<cfset ind++>
 
 													<!--- show more --->
