@@ -1,7 +1,4 @@
-
-<cfoutput>
 <cfscript>
-
 	if(isNull(url.type)) {
 		url.type = "releases";
 	} else if(url.type != "releases"
@@ -374,7 +371,7 @@
 
 				$('.permalink').each(function() {
 					let anchor = document.createElement('a');
-					anchor.href = '##' + $(this).attr('data-id');
+					anchor.href = '#' + $(this).attr('data-id');
 					$(this).wrapInner(anchor)
 				});
 				$('span.permalink').hide();
@@ -386,26 +383,26 @@
 
 			function hideData (a) {
 				$('.'+a).removeClass('show');
-				$('##'+a+'_id').show();
+				$('#'+a+'_id').show();
 			}
 			function hideToggle (a) {
-				$('##'+a).hide();
+				$('#'+a).hide();
 			}
 			function change(type,field,id) {
-				window.location="?"+type+"="+field.value+"##"+id;
+				window.location="?"+type+"="+field.value+"#"+id;
 			}
 		</script>
 
 		<style rel="stylesheet">
 			.data-content {
-				background-color: ##01798a;
+				background-color: #01798a;
 				color: white;
 				min-width: 100%;
 				font-size: 14px;
 				line-height: 15px;
 			}
 			.triggerIcon {
-				color: ##01798a !important;
+				color: #01798a !important;
 			}
 			.pointer {
 				cursor: pointer;
@@ -434,7 +431,7 @@
 				font-size: 1.5rem;
 				font-weight: 400;
 				line-height: 1.5;
-				color: ##212529;
+				color: #212529;
 				text-align: left;
 			}
 			.descDiv {
@@ -454,18 +451,18 @@
 				font-weight: normal !important;
 			}
 			.row_even {
-				background-color: ##ebebeb;
+				background-color: #ebebeb;
 				padding: 1% 0 0 4%;
 			}
 			.row_odd {
-				background-color: ##dadada;
+				background-color: #dadada;
 				padding: 1% 0 0 4%;
 			}
 			.borderInfo {
-				border: 1px ridge ##c7c7c7 !important;
+				border: 1px ridge #c7c7c7 !important;
 				padding-left: 0px !important;
 				padding-right: 0px !important;
-				background-color: ##ebebeb;
+				background-color: #ebebeb;
 			}
 			.well {
 				background-color: white !important;
@@ -474,20 +471,20 @@
 				padding: 0.5px 0px !important;
 			}
 			.popover.bottom .arrow:after {
-				border-bottom-color: ##01798a !important;
+				border-bottom-color: #01798a !important;
 			}
 			.popover {
-				border: 2px solid ##01798a !important;
+				border: 2px solid #01798a !important;
 			}
 			.popover-title {
 				padding: 4px 8px !important;
 			}
 			.row_alterEven {
-				background-color: ##ebebeb;
+				background-color: #ebebeb;
 				padding: 0% 0 0 4%;
 			}
 			.row_alterOdd {
-				background-color: ##dadada;
+				background-color: #dadada;
 				padding: 0% 0 0 4%;
 			}
 			/*.TextStyle{ padding: 1%; font-family: "Segoe UI"; font-size: 1.25rem; font-weight: 600;}*/
@@ -533,13 +530,17 @@
 
 	<body class="container py-3">
 
-		<!--- output --->
+		<cfoutput>
 			<div class="bg-primary jumbotron text-white">
 				<h1 class="display-3">Downloads</h1>
 				<p>Lucee Server and Extension downloads</p>
 			</div>
 
-			<cfif type EQ "releases" or type EQ "snapshots" or type EQ "abc" or type EQ "beta" or type EQ "rc">
+			<cfif type EQ "releases"
+				or type EQ "snapshots"
+				or type EQ "abc"
+				or type EQ "beta"
+				or type EQ "rc">
 				
 				<cfif true>
 					
@@ -851,6 +852,6 @@
 
 				</cfif>
 			</cfif>
+		</cfoutput>
 	</body>
 </html>
-</cfoutput>
