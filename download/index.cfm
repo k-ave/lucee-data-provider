@@ -482,7 +482,7 @@ lang.installer.lin32="Linux (32b)";
 										<cfif !structKeyEXists(url,_type)>
 											<cfloop struct="#versions#" index="vs" item="data"><cfif data.type==_type><cfset url[_type]=vs><cfset rows[_type]=vs><cfbreak></cfif></cfloop>
 										</cfif>
-										<b><h2>#singular[_type]#</h2> <!--- #ldownloads[type].versionNoAppendix#</b> (#lsDateFormat(ldownloads[type].jarDate)#) --->
+										<h2><b>#singular[_type]#</b></h2> <!--- #ldownloads[type].versionNoAppendix#</b> (#lsDateFormat(ldownloads[type].jarDate)#) --->
 										<select onchange="change('#_type#',this, 'core')" style="color:##7f8c8d;font-style:normal;" id="lCore" class="form-control" <!--- class="custom-select" --->>
 											<cfloop struct="#versions#" index="vs" item="data"><cfif vs=="05.003.007.0044.100"><cfcontinue></cfif><cfif data.type==_type><option <cfif url[_type]==vs><cfset rows[_type]=vs> selected="selected"</cfif> value="#vs#"><!---
 
