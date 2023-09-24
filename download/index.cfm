@@ -1,13 +1,14 @@
 <cfscript>
-	if(isNull(url.type)) {
-		url.type = "releases";
-	} else if(url.type != "releases"
-			|| url.type != "snapshots"
-			|| url.type != "rc"
-			|| url.type != "beta"
-			|| url.type != "abc") {
-		url.type = "releases";
-	}
+	aryValidTypes = [
+		"releases",
+		"snapshots",
+		"rc",
+		"beta",
+		"abc"
+	];
+
+	param name="url.type" default="releases";
+	url.type = !arrayFind(aryValidTypes, url.type) ? "releases" : url.type;
 
 	doS3 = {
 		express : true,
@@ -18,14 +19,99 @@
 		war : true
 	};
 
+	stcLang = {
+		desc: {
+			abc: "Beta and Release Candidates are a preview for upcoming versions and not ready for production environments.",
+			beta: "Beta are a preview for upcoming versions and not ready for production environments.",
+			rc: "Release Candidates are candidates to get ready for production environments.",
+			releases: "Releases are ready for production environments.",
+			snapshots: "Snapshots are generated automatically with every push to the repository. Snapshots can be unstable are NOT recommended for production environments."
+		},
+		express: "The Express version is an easy to setup version which does not need to be installed. Just extract the zip file onto your computer and without further installation you can start by executing the corresponding start file. This is especially useful if you would like to get to know Lucee or want to test your applications under Lucee. It is also useful for use as a development environment.",
+		war: 'Java Servlet engine Web ARchive',
+		core: 'The Lucee Core file, you can simply copy this to the "patches" folder of your existing Lucee installation.',
+		dependencies: 'Dependencies (3 party bundles) Lucee needs for this release, simply copy this to "/lucee-server/bundles" of your installation (If this files are not present Lucee will download them).',
+		jar: 'Lucee jar file without dependencies Lucee needs to run. Simply copy this file to your servlet engine lib folder (classpath). If dependecy bundles are not in place Lucee will download them.',
+		luceeAll: 'Lucee jar file that contains all dependencies Lucee needs to run. Simply copy this file to your servlet engine lib folder (classpath)',
+		lib: "The Lucee Jar file, you can simply copy to your existing installation to update to Lucee 5. This file comes in 2 favors, the ""lucee.jar"" that only contains Lucee itself and no dependecies (Lucee will download dependencies if necessary) or the lucee-all.jar with all dependencies Lucee needs bundled (not availble for versions before 5.0.0.112).",
+		libNew: "The Lucee Jar file, you can simply copy to your existing installation to update to Lucee 5. This file comes with all necessary dependencies Lucee needs build in, so no addional jars necessary. You can have this Jar in 2 flavors, a version containing all Core Extension (like Hibernate, Lucene or Axis) and a version with no Extension bundled.",
+		installer: {
+			win: "Windows",
+			lin64: "Linux (64b)",
+			lin32: "Linux (32b)"
+		},
+		singular: {
+			releases: "Release",
+			snapshots: "Snapshot",
+			abc: 'RC / Beta',
+			beta: 'Beta',
+			rc: 'RC',
+			ext: "Release",
+			extsnap: "Snapshot",
+			extabc: 'RC / Beta'
+		},
+		multi: {
+			release: "Releases",
+			snapshot: "Snapshots",
+			abc: 'RCs / Betas',
+			beta: 'Betas',
+			rc: 'Release Candidates'
+		}
+	}
+
 	listURL = "https://release.lucee.org/rest/update/provider/list/";
-
-	extcacheLiveSpanInMinutes = 1000;
-
 	EXTENSION_PROVIDER = "https://extension.lucee.org/rest/extension/provider/info?withLogo=true&type=all";
+	baseURL = "https://release.lucee.org/rest/update/provider/";
+	cdnURL = "https://cdn.lucee.org/";
+	cdnURLExt = "https://ext.lucee.org/";
+
+	/*
+	// not used
+	extcacheLiveSpanInMinutes = 1000;
+	MAX = 1000;
 	EXTENSION_DOWNLOAD = "https://extension.lucee.org/rest/extension/provider/{type}/{id}";
+	*/
 
+	// getting all the versions as a struct and sorting them by newest first
+	sortDesc = (versions) => {
+		var keys = structKeyArray(arguments.versions);
+		var stcNew = [:];
+		for(var i = arrayLen(keys); i > 0; i--) {
+			stcNew[keys[i]] = arguments.versions[keys[i]];
+		}
+		return stcNew;
+	}
+	versions = sortDesc(getVersions(structKeyExists(url,"reset")));
 
+	// add types - releases,snapshots,rc,beta
+	structEach(versions, (key, value) => {
+		// snapshots, rc, beta, alpha or none (release)
+		var strVersionType = lCase(listLast(arguments.value.version, '-'));
+
+		switch (strVersionType) {
+			case 'snapshot':
+				arguments.value.type = 'snapshots';
+				break;
+			case 'rc':
+				arguments.value.type = 'rc';
+				break;
+			case 'beta':
+				arguments.value.type = 'beta'
+				break;
+			case 'alpha':
+				arguments.value.type = 'alpha';
+				break;
+			default:
+				arguments.value.type = 'releases';
+		}
+
+		// version used as output in select option
+		arguments.value['versionNoAppendix'] = arguments.value.version;
+	});
+</cfscript>
+
+<!--- FUNCTIONS --->
+<cfscript>
 	function getExtensions(flush = false) localmode=true {
 		if(!arguments.flush && !isNull(application.extInfo)) {
 			return application.extInfo;
@@ -238,85 +324,6 @@
 		}
 
 		return application.mavenChangeLog[id] ?: "";
-	}
-
-
-	baseURL="https://release.lucee.org/rest/update/provider/";
-
-	stcLang = {
-		desc: {
-			abc : "Beta and Release Candidates are a preview for upcoming versions and not ready for production environments.",
-			beta : "Beta are a preview for upcoming versions and not ready for production environments.",
-			rc : "Release Candidates are candidates to get ready for production environments.",
-			releases : "Releases are ready for production environments.",
-			snapshots : "Snapshots are generated automatically with every push to the repository. Snapshots can be unstable are NOT recommended for production environments."
-		},
-		express : "The Express version is an easy to setup version which does not need to be installed. Just extract the zip file onto your computer and without further installation you can start by executing the corresponding start file. This is especially useful if you would like to get to know Lucee or want to test your applications under Lucee. It is also useful for use as a development environment.",
-		war : 'Java Servlet engine Web ARchive',
-		core : 'The Lucee Core file, you can simply copy this to the "patches" folder of your existing Lucee installation.',
-		dependencies : 'Dependencies (3 party bundles) Lucee needs for this release, simply copy this to "/lucee-server/bundles" of your installation (If this files are not present Lucee will download them).',
-		jar : 'Lucee jar file without dependencies Lucee needs to run. Simply copy this file to your servlet engine lib folder (classpath). If dependecy bundles are not in place Lucee will download them.',
-		luceeAll : 'Lucee jar file that contains all dependencies Lucee needs to run. Simply copy this file to your servlet engine lib folder (classpath)',
-		lib : "The Lucee Jar file, you can simply copy to your existing installation to update to Lucee 5. This file comes in 2 favors, the ""lucee.jar"" that only contains Lucee itself and no dependecies (Lucee will download dependencies if necessary) or the lucee-all.jar with all dependencies Lucee needs bundled (not availble for versions before 5.0.0.112).",
-		libNew : "The Lucee Jar file, you can simply copy to your existing installation to update to Lucee 5. This file comes with all necessary dependencies Lucee needs build in, so no addional jars necessary. You can have this Jar in 2 flavors, a version containing all Core Extension (like Hibernate, Lucene or Axis) and a version with no Extension bundled.",
-		installer : {
-			win : "Windows",
-			lin64 : "Linux (64b)",
-			lin32 : "Linux (32b)"
-		}
-	}
-
-	cdnURL = "https://cdn.lucee.org/";
-	cdnURLExt = "https://ext.lucee.org/";
-	MAX = 1000;
-
-	singular = {
-		releases : "Release",
-		snapshots : "Snapshot",
-		abc : 'RC / Beta',
-		beta : 'Beta',
-		rc : 'RC',
-		ext : "Release",
-		extsnap : "Snapshot",
-		extabc : 'RC / Beta'
-	};
-
-	multi = {
-		release : "Releases",
-		snapshot : "Snapshots",
-		abc : 'RCs / Betas',
-		beta : 'Betas',
-		rc : 'Release Candidates'
-	};
-
-	noVersion = "There are currently no downloads available in this category.";
-	versions = getVersions(structKeyExists(url,"reset"));
-
-	keys = structKeyArray(versions);
-	tmp = structNew('linked');
-	for(i = arrayLen(keys); i > 0 ; i--) {
-		k = keys[i];
-		tmp[k] = versions[k];
-	}
-
-	versions=tmp;
-	// add types
-	//releases,snapshots,rc,beta
-	loop struct=versions index="vs" item="data" {
-
-		if(findNoCase("-snapshot",data.version)) {
-			data['type']="snapshots";
-		} else if(findNoCase("-rc",data.version)) {
-			data['type']="rc";
-		} else if(findNoCase("-beta",data.version)) {
-			data['type']="beta";
-		} else if(findNoCase("-alpha",data.version)) {
-			data['type']="alpha";
-		} else {
-			data['type']="releases";
-		} 
-
-		data['versionNoAppendix']=data.version;
 	}
 </cfscript>
 
@@ -570,7 +577,7 @@
 										</cfloop>
 									</cfif>
 
-									<h2><b>#singular[_type]#</b></h2>
+									<h2><b>#stcLang.singular[_type]#</b></h2>
 									<select onchange="change('#_type#',this, 'core')" style="color:##7f8c8d;font-style:normal;" id="lCore" class="form-control">
 										<cfloop struct="#versions#" index="vs" item="data">
 											<cfif vs == "05.003.007.0044.100"
@@ -610,7 +617,7 @@
 
 										<div class="fontStyle">
 											<a href="#uri#">Express</a>
-											<span  class="triggerIcon pointer" style="color :##01798A" title="#stcLang.express#">
+											<span class="triggerIcon pointer" style="color :##01798A" title="#stcLang.express#">
 												<span class="glyphicon glyphicon-info-sign"></span>
 											</span>
 										</div>
@@ -835,7 +842,7 @@
 												<div class="mb-0 mt-1 col-xs-4 col-md-4 borderInfo">
 													<div class="bg-primary jumbotron text-white jumboStyle">
 														<span class="btn-primary">
-															<h2 class="fontSize">#multi[type]#</h2>
+															<h2 class="fontSize">#stcLang.multi[type]#</h2>
 														</span>
 													</div>
 
@@ -862,10 +869,11 @@
 														<!--- TODO: use css nth/child for zebra --->
 														<div class="textStyle textWrap row_alter<cfif ind MOD 2 eq 0>Even<cfelse>Odd</cfif>">
 															<a href="#cdnURLExt##el.filename#">#ver# (#lsDateFormat(el.date)#)</a>
-															<!--- <span  class="triggerIcon pointer" 
-															style="color :##01798A" title="">
-															<span class="glyphicon glyphicon-info-sign"></span>
-															</span>--->
+															<!---
+																<span  class="triggerIcon pointer" style="color :##01798A" title="">
+																	<span class="glyphicon glyphicon-info-sign"></span>
+																</span>
+															--->
 														</div>
 
 														<!--- show less --->
