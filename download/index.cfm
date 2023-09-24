@@ -1,120 +1,173 @@
 
 <cfoutput>
 <cfscript>
-if(isNull(url.type)) url.type="releases";
-else if(url.type != "releases" || url.type != "snapshots" || url.type != "rc" || url.type != "beta" || url.type != "abc") url.type="releases";
-doS3={
-	express:true
-	,jar:true
-	,lco:true
-	,light:true
-	,zero:true
-	,war:true
-};
 
-listURL="https://release.lucee.org/rest/update/provider/list/";
+	if(isNull(url.type)) {
+		url.type = "releases";
+	} else if(url.type != "releases"
+			|| url.type != "snapshots"
+			|| url.type != "rc"
+			|| url.type != "beta"
+			|| url.type != "abc") {
+		url.type = "releases";
+	}
+
+	doS3 = {
+		express : true,
+		jar : true,
+		lco : true,
+		light : true,
+		zero : true,
+		war : true
+	};
+
+	listURL = "https://release.lucee.org/rest/update/provider/list/";
+
+	extcacheLiveSpanInMinutes = 1000;
+
+	EXTENSION_PROVIDER = "https://extension.lucee.org/rest/extension/provider/info?withLogo=true&type=all";
+	EXTENSION_DOWNLOAD = "https://extension.lucee.org/rest/extension/provider/{type}/{id}";
 
 
-extcacheLiveSpanInMinutes=1000;
+	function getExtensions(flush = false) localmode=true {
+		if(!arguments.flush && !isNull(application.extInfo)) {
+			return application.extInfo;
+		}
 
-EXTENSION_PROVIDER="https://extension.lucee.org/rest/extension/provider/info?withLogo=true&type=all";
-EXTENSION_DOWNLOAD="https://extension.lucee.org/rest/extension/provider/{type}/{id}";
-
-
-function getExtensions(flush=false) localmode=true {
-	if(arguments.flush || isNull(application.extInfo)) {
 		http url=EXTENSION_PROVIDER&"&flush="&arguments.flush result="http";
-		if(isNull(http.status_code) || http.status_code!=200) throw "could not connect to extension provider (#ep#)";
-		var data=deSerializeJson(http.fileContent,false);
+		if(isNull(http.status_code) || http.status_code!=200)
+			throw "could not connect to extension provider (#ep#)";
+
+		var data = deSerializeJson(http.fileContent, false);
 		if (!structKeyExists( data, "meta" ) ) {
 			systemOutput("error fetching extensions, falling back on cache", true);
+
 			http url=EXTENSION_PROVIDER result="http";
-			if(isNull(http.status_code) || http.status_code!=200) throw "could not connect to extension provider (#ep#)";
-			data=deSerializeJson(http.fileContent,false);
+			if(isNull(http.status_code) || http.status_code!=200)
+				throw "could not connect to extension provider (#ep#)";
+
+			data = deSerializeJson(http.fileContent, false);
 			application.extInfo = data.extensions;
 		} else {
 			application.extInfo = data.extensions;
 		}
-	}
-	return application.extInfo;
-}
 
-function extractVersions(qry) localmode=true {
-	// To make a call this function once per extension rather than three times
-	var data["release"]=structNew("linked");
-	var data["abc"]=structNew("linked");
-	var data["snapshot"]=structNew("linked");
-
-	// first we get the current version
-	// if(variables.is(arguments.type,arguments.qry.version)) {
-	// 	data[arguments.qry.version]={'filename':arguments.qry.fileName,'date':arguments.qry.created};
-	// }
-
-	var _other = arguments.qry.older;
-	var _otherName = arguments.qry.olderName;
-	var _otherDate = arguments.qry.olderDate;
-
-	var arrExt = [];
-	loop array=_other index="local.i" item="local.version" {
-		arrExt[i] = {'version':version,'filename':_otherName[i],'date':_otherDate[i]}
+		return application.extInfo;
 	}
 
-	// appends current into other because some current version is not newer.
-	arrayAppend(arrExt, {'version':arguments.qry.version,'filename':arguments.qry.fileName,'date':arguments.qry.created});
+	function extractVersions(qry) localmode=true {
+		// To make a call this function once per extension rather than three times
+		var data = {
+			"release": [:],
+			"abc": [:],
+			"snapshot": [:]
+		}
 
-	// sorts by version
-	arraySort(arrExt, function(e1, e2){
-		return compare(toSort(e2.version), toSort(e1.version));
-	});
+		// first we get the current version
+		// if(variables.is(arguments.type,arguments.qry.version)) {
+		// 	data[arguments.qry.version]={'filename':arguments.qry.fileName,'date':arguments.qry.created};
+		// }
 
-	loop array=arrExt index="i" item="local.ext" {
-		if (variables.is("release",ext.version)) data["release"][ext.version]={'filename':ext.filename,'date':ext.date};
-		else if (variables.is("abc",ext.version)) data["abc"][ext.version]={'filename':ext.filename,'date':ext.date};
-		else if (variables.is("snapshot",ext.version)) data["snapshot"][ext.version]={'filename':ext.filename,'date':ext.date};
+		var _other = arguments.qry.older;
+		var _otherName = arguments.qry.olderName;
+		var _otherDate = arguments.qry.olderDate;
+
+		var arrExt = [];
+		loop array=_other index="local.i" item="local.version" {
+			arrExt[i] = {
+				'version' : version,
+				'filename' : _otherName[i],
+				'date' : _otherDate[i]
+			}
+		}
+
+		// appends current into other because some current version is not newer.
+		arrayAppend(arrExt, {
+			'version' : arguments.qry.version,
+			'filename' : arguments.qry.fileName,
+			'date' : arguments.qry.created
+		});
+
+		// sorts by version
+		arraySort(arrExt, function(e1, e2){
+			return compare(toSort(e2.version), toSort(e1.version));
+		});
+
+		loop array=arrExt index="i" item="local.ext" {
+			if (variables.is("release",ext.version)) {
+				data.release[ext.version] = {
+					'filename' : ext.filename,
+					'date' : ext.date
+				};
+			} else if (variables.is("abc",ext.version)) {
+				data.abc[ext.version] = {
+					'filename' : ext.filename,
+					'date' : ext.date
+				};
+			} else if (variables.is("snapshot",ext.version)) {
+				data.snapshot[ext.version] = {
+					'filename' : ext.filename,
+					'date' : ext.date
+				};
+			}
+		}
+		return data;
 	}
-	return data;
-}
 
-function toSort( required String version) localmode=true {
-	listLength = listLen(arguments.version, "-");
+	function toSort(required String version) localmode=true {
+		var listLength = listLen(arguments.version, "-");
+		var arr = [];
 
-	if (listLength == 3) arr = listToArray(listDeleteAt(arguments.version, listLength, "-"), ".,-"); // ESAPI extension has 5 parameters
-	else arr  = listToArray(listFirst(arguments.version, "-"), ".");
+		if (listLength == 3) {
+			arr = listToArray(listDeleteAt(arguments.version, listLength, "-"), ".,-"); // ESAPI extension has 5 parameters
+		} else {
+			arr = listToArray(listFirst(arguments.version, "-"), ".");
+		}
 
-	rtn="";
-	loop array=arr index="i" item="v" {
-		if(len(v)<5) rtn&="."&repeatString("0",5-len(v))&v;
-		else rtn&="."&v;
+		var rtn = "";
+		var i = "";
+		var v = "";
+
+		loop array=arr index="i" item="v" {
+			if(len(v)<5) rtn&="."&repeatString("0",5-len(v))&v;
+			else rtn&="."&v;
+		}
+
+		return rtn;
 	}
-	return rtn;
-}
 
-function is(type, val) {
-	if (arguments.type=="all" || arguments.type=="") 
-		return true;
-	if (arguments.type=="snapshot") 
-		return findNoCase('-SNAPSHOT', arguments.val);
-	else if (arguments.type=="abc") {
-		if(findNoCase('-ALPHA', arguments.val) 
-			|| findNoCase('-BETA', arguments.val)
-			|| findNoCase('-RC', arguments.val)
-		) 
+	function is(type, val) {
+		if (arguments.type == "all" || arguments.type == "") {
 			return true;
-		return false;
-	}
-	else if(arguments.type=="release")  {
-		if(!findNoCase('-ALPHA', arguments.val) 
-		&& !findNoCase('-BETA', arguments.val)
-		&& !findNoCase('-RC', arguments.val)
-		&& !findNoCase('-SNAPSHOT', arguments.val)
-	) 
-		return true;
-	return false;
-	}
-}
+		}
 
-function getVersions(flush) {
-	if(!structKeyExists(application,"extVer") || arguments.flush) {
+		if (arguments.type == "snapshot") {
+			return findNoCase('-SNAPSHOT', arguments.val);
+		} else if (arguments.type == "abc") {
+			if(findNoCase('-ALPHA', arguments.val) 
+				|| findNoCase('-BETA', arguments.val)
+				|| findNoCase('-RC', arguments.val)
+			) {
+				return true;
+			}
+			return false;
+		} else if(arguments.type == "release") {
+			if(!findNoCase('-ALPHA', arguments.val)
+				&& !findNoCase('-BETA', arguments.val)
+				&& !findNoCase('-RC', arguments.val)
+				&& !findNoCase('-SNAPSHOT', arguments.val)
+			) {
+				return true;
+			}
+			return false;
+		}
+	}
+
+	function getVersions(flush = false) {
+		if(!arguments.flush && structKeyExists(application, "extVer")) {
+			return application.extVer;
+		}
+		
 		http url=listURL&"?extended=true"&(arguments.flush?"&flush=true":"") result="local.res";
 		var versions = deserializeJson(res.fileContent);
 		if ( isStruct(versions) && structKeyExists(versions, "message") ) {
@@ -122,124 +175,153 @@ function getVersions(flush) {
 			http url=listURL&"?extended=true" result="local.res";
 			versions = deserializeJson(res.fileContent);
 		}
+
 		application.extVer = versions;
-	}
-	return application.extVer;
-}
-function getDate(version,flush=false) {
-	if(arguments.flush || isNull(application.mavenDates[arguments.version])) {
-		local.res="";
-		try{
-			http url="https://release.lucee.org/rest/update/provider/getdate/"&arguments.version result="local.res";
-			var res= trim(deserializeJson(res.fileContent));
-			application.mavenDates[version]= lsDateFormat(parseDateTime(res));
-		}
-		catch(e) {}
-		if(len(res)==0) return "";
-		
-	}
-	return application.mavenDates[arguments.version]?:"";
-}
 
-function getInfo(version,flush=false) {
-	if(arguments.flush || isNull(application.mavenInfo[version])) {
-		local.res="";
-		try{
-			http url="https://release.lucee.org/rest/update/provider/info/"&version result="local.res";
-			var res= deserializeJson(res.fileContent);
-			application.mavenInfo[version]= res;
-		}
-		catch(e) {}
-		if(len(res)==0) return "";
-		
+		return application.extVer;
 	}
-	return application.mavenInfo[version]?:"";
-}
 
-function getChangelog(versionFrom,versionTo,flush=false) {
-	var id=arguments.versionFrom&"-"&arguments.versionTo;
-	if(arguments.flush || isNull(application.mavenChangeLog[id])) {
-		local.res="";
+	function getDate(version, flush = false) {
+		if(!arguments.flush && !isNull(application.mavenDates[arguments.version])) {
+			return application.mavenDates[arguments.version] ?: "";
+		}
+
+		var res = "";
+
+		try{
+			http url="https://release.lucee.org/rest/update/provider/getdate/"&arguments.version result="res";
+			res = trim(deserializeJson(res.fileContent));
+			application.mavenDates[version] = lsDateFormat(parseDateTime(res));
+		} catch(e) {}
+
+		if(len(res) == 0) {
+			return "";
+		}
+
+		return application.mavenDates[arguments.version] ?: "";
+	}
+
+	function getInfo(version, flush = false) {
+
+		if(!arguments.flush && !isNull(application.mavenInfo[version])) {
+			return application.mavenInfo[version] ?: "";
+		}
+
+		var res = "";
+
+		try{
+			http url="https://release.lucee.org/rest/update/provider/info/"&version result="res";
+			res = deserializeJson(res.fileContent);
+			application.mavenInfo[version] = res;
+		} catch(e) {}
+
+		if(len(res) == 0) {
+			return "";
+		}
+
+		return application.mavenInfo[version] ?: "";
+	}
+
+	function getChangelog(versionFrom, versionTo, flush = false) {
+		var id = arguments.versionFrom&"-"&arguments.versionTo;
+		if(!arguments.flush && !isNull(application.mavenChangeLog[id])) {
+			return application.mavenChangelog[id] ?: "";
+		}
+
+		var res = "";
+
 		//try{
-			http url="https://release.lucee.org/rest/update/provider/changelog/"&arguments.versionFrom&"/"&arguments.versionTo result="local.res";
-			var res= deserializeJson(res.fileContent);
-			application.mavenChangeLog[id]= res;
+			http url="https://release.lucee.org/rest/update/provider/changelog/"&arguments.versionFrom&"/"&arguments.versionTo result="res";
+			var res = deserializeJson(res.fileContent);
+			application.mavenChangeLog[id] = res;
 		//}catch(e) {}
-		if(len(res)==0) return "";
-		
+
+		if(len(res)==0) {
+			return "";
+		}
+
+		return application.mavenChangeLog[id] ?: "";
 	}
-	return application.mavenChangeLog[id]?:"";
-}
 
 
-baseURL="https://release.lucee.org/rest/update/provider/";
+	baseURL="https://release.lucee.org/rest/update/provider/";
 
+	stcLang = {
+		desc: {
+			abc : "Beta and Release Candidates are a preview for upcoming versions and not ready for production environments.",
+			beta : "Beta are a preview for upcoming versions and not ready for production environments.",
+			rc : "Release Candidates are candidates to get ready for production environments.",
+			releases : "Releases are ready for production environments.",
+			snapshots : "Snapshots are generated automatically with every push to the repository. Snapshots can be unstable are NOT recommended for production environments."
+		},
+		express : "The Express version is an easy to setup version which does not need to be installed. Just extract the zip file onto your computer and without further installation you can start by executing the corresponding start file. This is especially useful if you would like to get to know Lucee or want to test your applications under Lucee. It is also useful for use as a development environment.",
+		war : 'Java Servlet engine Web ARchive',
+		core : 'The Lucee Core file, you can simply copy this to the "patches" folder of your existing Lucee installation.',
+		dependencies : 'Dependencies (3 party bundles) Lucee needs for this release, simply copy this to "/lucee-server/bundles" of your installation (If this files are not present Lucee will download them).',
+		jar : 'Lucee jar file without dependencies Lucee needs to run. Simply copy this file to your servlet engine lib folder (classpath). If dependecy bundles are not in place Lucee will download them.',
+		luceeAll : 'Lucee jar file that contains all dependencies Lucee needs to run. Simply copy this file to your servlet engine lib folder (classpath)',
+		lib : "The Lucee Jar file, you can simply copy to your existing installation to update to Lucee 5. This file comes in 2 favors, the ""lucee.jar"" that only contains Lucee itself and no dependecies (Lucee will download dependencies if necessary) or the lucee-all.jar with all dependencies Lucee needs bundled (not availble for versions before 5.0.0.112).",
+		libNew : "The Lucee Jar file, you can simply copy to your existing installation to update to Lucee 5. This file comes with all necessary dependencies Lucee needs build in, so no addional jars necessary. You can have this Jar in 2 flavors, a version containing all Core Extension (like Hibernate, Lucene or Axis) and a version with no Extension bundled.",
+		installer : {
+			win : "Windows",
+			lin64 : "Linux (64b)",
+			lin32 : "Linux (32b)"
+		}
+	}
 
-jarInfo='(Java ARchive, read more about <a target="_blank" href="https://en.wikipedia.org/wiki/JAR_(file_format)">here</a>)';
-lang.desc={
-	abc:"Beta and Release Candidates are a preview for upcoming versions and not ready for production environments."
-	,beta:"Beta are a preview for upcoming versions and not ready for production environments."
-	,rc:"Release Candidates are candidates to get ready for production environments."
-	,releases:"Releases are ready for production environments."
-	,snapshots:"Snapshots are generated automatically with every push to the repository. 
-	Snapshots can be unstable are NOT recommended for production environments."
-};
+	cdnURL = "https://cdn.lucee.org/";
+	cdnURLExt = "https://ext.lucee.org/";
+	MAX = 1000;
 
-lang.express="The Express version is an easy to setup version which does not need to be installed. Just extract the zip file onto your computer and without further installation you can start by executing the corresponding start file. This is especially useful if you would like to get to know Lucee or want to test your applications under Lucee. It is also useful for use as a development environment.";
-lang.war='Java Servlet engine Web ARchive';
-lang.core='The Lucee Core file, you can simply copy this to the "patches" folder of your existing Lucee installation.';
-lang.jar='The Lucee jar #jarInfo#, simply copy that file to the lib (classpath) folder of your servlet engine.';
-lang.dependencies='Dependencies (3 party bundles) Lucee needs for this release, simply copy this to "/lucee-server/bundles" of your installation (If this files are not present Lucee will download them).';
-lang.jar='Lucee jar file without dependencies Lucee needs to run. Simply copy this file to your servlet engine lib folder (classpath). If dependecy bundles are not in place Lucee will download them.';
-lang.luceeAll='Lucee jar file that contains all dependencies Lucee needs to run. Simply copy this file to your servlet engine lib folder (classpath)';
-
-lang.lib="The Lucee Jar file, you can simply copy to your existing installation to update to Lucee 5. This file comes in 2 favors, the ""lucee.jar"" that only contains Lucee itself and no dependecies (Lucee will download dependencies if necessary) or the lucee-all.jar with all dependencies Lucee needs bundled (not availble for versions before 5.0.0.112).";
-lang.libNew="The Lucee Jar file, you can simply copy to your existing installation to update to Lucee 5. This file comes with all necessary dependencies Lucee needs build in, so no addional jars necessary. You can have this Jar in 2 flavors, a version containing all Core Extension (like Hibernate, Lucene or Axis) and a version with no Extension bundled.";
-
-lang.installer.win="Windows";
-lang.installer.lin64="Linux (64b)";
-lang.installer.lin32="Linux (32b)";
-
-
-
-	cdnURL="https://cdn.lucee.org/";
-	cdnURLExt="https://ext.lucee.org/";
-	MAX=1000;
-
-	singular={
-		releases:"Release",snapshots:"Snapshot",abc:'RC / Beta',beta:'Beta',rc:'RC'
-		,ext:"Release",extsnap:"Snapshot",extabc:'RC / Beta'
-	};
-	multi={
-		release:"Releases",
-		snapshot:"Snapshots",
-		abc:'RCs / Betas',
-		beta:'Betas',
-		rc:'Release Candidates'
+	singular = {
+		releases : "Release",
+		snapshots : "Snapshot",
+		abc : 'RC / Beta',
+		beta : 'Beta',
+		rc : 'RC',
+		ext : "Release",
+		extsnap : "Snapshot",
+		extabc : 'RC / Beta'
 	};
 
-	noVersion="There are currently no downloads available in this category.";
-	versions=getVersions(structKeyExists(url,"reset"));
-	keys=structKeyArray(versions);
-	tmp=structNew('linked');
-	for(i=arrayLen(keys);i>0;i--) {
-		k=keys[i];
-		tmp[k]=versions[k];
+	multi = {
+		release : "Releases",
+		snapshot : "Snapshots",
+		abc : 'RCs / Betas',
+		beta : 'Betas',
+		rc : 'Release Candidates'
+	};
+
+	noVersion = "There are currently no downloads available in this category.";
+	versions = getVersions(structKeyExists(url,"reset"));
+
+	keys = structKeyArray(versions);
+	tmp = structNew('linked');
+	for(i = arrayLen(keys); i > 0 ; i--) {
+		k = keys[i];
+		tmp[k] = versions[k];
 	}
+
 	versions=tmp;
 	// add types
 	//releases,snapshots,rc,beta
 	loop struct=versions index="vs" item="data" {
-		if(findNoCase("-snapshot",data.version)) data['type']="snapshots";
-		else if(findNoCase("-rc",data.version)) data['type']="rc";
-		else if(findNoCase("-beta",data.version)) data['type']="beta";
-		else if(findNoCase("-alpha",data.version)) data['type']="alpha";
-		else data['type']="releases";
+
+		if(findNoCase("-snapshot",data.version)) {
+			data['type']="snapshots";
+		} else if(findNoCase("-rc",data.version)) {
+			data['type']="rc";
+		} else if(findNoCase("-beta",data.version)) {
+			data['type']="beta";
+		} else if(findNoCase("-alpha",data.version)) {
+			data['type']="alpha";
+		} else {
+			data['type']="releases";
+		} 
 
 		data['versionNoAppendix']=data.version;
 	}
 </cfscript>
-
 
 <!DOCTYPE html>
 <html>
@@ -447,9 +529,8 @@ lang.installer.lin32="Linux (32b)";
 				}
 			}
 		</style>
-
-
 	</head>
+
 	<body class="container py-3">
 
 		<!--- output --->
@@ -498,7 +579,7 @@ lang.installer.lin32="Linux (32b)";
 	
 	<span style="font-size:12px">(#res#)</span></cfif><br><br>
 
-										#lang.desc[_type]#</div>
+										#stcLang.desc[_type]#</div>
 									
 									<!--- Express --->
 									<cfif structKeyExists(dw,"express")><div class="row_odd divHeight">
@@ -509,7 +590,7 @@ lang.installer.lin32="Linux (32b)";
 										</cfif>
 										<div class="fontStyle">
 											<a href="#uri#">Express</a>
-											<span  class="triggerIcon pointer" style="color :##01798A" title="#lang.express#">
+											<span  class="triggerIcon pointer" style="color :##01798A" title="#stcLang.express#">
 												<span class="glyphicon glyphicon-info-sign"></span>
 											</span>
 										</div>
@@ -535,7 +616,7 @@ lang.installer.lin32="Linux (32b)";
 													<cfif count GT 1>
 														<cfset str&='<br>'>
 													</cfif>
-													<cfset str&='<a href="#uri#">#lang.installer[kk]# Installer</a> <span  class="triggerIcon pointer" style="color :##01798A" title="#lang.installer[kk]# Installer">
+													<cfset str&='<a href="#uri#">#stcLang.installer[kk]# Installer</a> <span  class="triggerIcon pointer" style="color :##01798A" title="#stcLang.installer[kk]# Installer">
 													<span class="glyphicon glyphicon-info-sign"></span>
 												</span>'>
 													<cfset count++>
@@ -553,7 +634,7 @@ lang.installer.lin32="Linux (32b)";
 												<cfset uri="#baseURL#loader/#dw.version#">
 											</cfif>
 										
-											<div class="fontStyle"><a href="#(uri)#">lucee.jar</a><span  class="triggerIcon pointer" style="color :##01798A" title="#lang.jar#">
+											<div class="fontStyle"><a href="#(uri)#">lucee.jar</a><span  class="triggerIcon pointer" style="color :##01798A" title="#stcLang.jar#">
 												<span class="glyphicon glyphicon-info-sign"></span>
 											</span></div></cfif>
 											<cfif structKeyExists(dw,"light")>
@@ -589,7 +670,7 @@ lang.installer.lin32="Linux (32b)";
 											<cfset uri="#baseURL#core/#dw.version#">
 										</cfif>
 											
-										<div class="fontStyle"><a href="#(uri)#" >Core</a><span class="triggerIcon pointer" style="color :##01798A" title='#lang.core#'>
+										<div class="fontStyle"><a href="#(uri)#" >Core</a><span class="triggerIcon pointer" style="color :##01798A" title='#stcLang.core#'>
 												<span class="glyphicon glyphicon-info-sign"></span>
 											</span></div>
 									</div></cfif>
@@ -601,7 +682,7 @@ lang.installer.lin32="Linux (32b)";
 											<cfset uri="#baseURL#war/#dw.version#">
 										</cfif>
 										
-										<div class="fontStyle"><a href="#(uri)#" title="#lang.war#">WAR</a><span class="triggerIcon pointer" style="color :##01798A" title="#lang.war#">
+										<div class="fontStyle"><a href="#(uri)#" title="#stcLang.war#">WAR</a><span class="triggerIcon pointer" style="color :##01798A" title="#stcLang.war#">
 												<span class="glyphicon glyphicon-info-sign"></span>
 											</span></div>
 									</div></cfif>
