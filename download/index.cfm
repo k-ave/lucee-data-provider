@@ -410,8 +410,6 @@
 			}
 			.triggerIcon {
 				color: #01798a !important;
-			}
-			.pointer {
 				cursor: pointer;
 			}
 			.jumboStyle {
@@ -617,7 +615,7 @@
 
 										<div class="fontStyle">
 											<a href="#uri#">Express</a>
-											<span class="triggerIcon pointer" style="color :##01798A" title="#stcLang.express#">
+											<span class="triggerIcon" title="#stcLang.express#">
 												<span class="glyphicon glyphicon-info-sign"></span>
 											</span>
 										</div>
@@ -634,7 +632,7 @@
 											<cfif left(dw.version,1) GT 4>
 												<div class="fontStyle">
 													<span class="text-primary">Coming Soon!</span>
-													<span class="triggerIcon pointer" style="color :##01798A" title="Installers will available on soon">
+													<span class="triggerIcon" title="Installers will available on soon">
 														<span class="glyphicon glyphicon-info-sign"></span>
 													</span>
 												</div>
@@ -653,7 +651,7 @@
 													<cfset str&='<br>'>
 												</cfif>
 
-												<cfset str &= '<a href="#uri#">#stcLang.installer[kk]# Installer</a>&nbsp;<span class="triggerIcon pointer" style="color :##01798A" title="#stcLang.installer[kk]# Installer"><span class="glyphicon glyphicon-info-sign"></span></span>'>
+												<cfset str &= '<a href="#uri#">#stcLang.installer[kk]# Installer</a>&nbsp;<span class="triggerIcon" title="#stcLang.installer[kk]# Installer"><span class="glyphicon glyphicon-info-sign"></span></span>'>
 												<cfset count++>
 											</cfloop>
 											<div class="fontStyle">#str#</div>
@@ -669,7 +667,7 @@
 
 											<div class="fontStyle">
 												<a href="#(uri)#">lucee.jar</a>
-												<span  class="triggerIcon pointer" style="color :##01798A" title="#stcLang.jar#">
+												<span  class="triggerIcon" title="#stcLang.jar#">
 													<span class="glyphicon glyphicon-info-sign"></span>
 												</span>
 											</div>
@@ -680,7 +678,7 @@
 
 											<div class="fontStyle">
 												<a href="#(uri)#">lucee-light.jar</a>
-												<span  class="triggerIcon pointer" style="color :##01798A" title='Lucee Jar file without any Extensions bundled, "Lucee light"'>
+												<span  class="triggerIcon" title='Lucee Jar file without any Extensions bundled, "Lucee light"'>
 													<span class="glyphicon glyphicon-info-sign"></span>
 												</span>
 											</div>
@@ -691,7 +689,7 @@
 
 											<div class="fontStyle">
 												<a href="#(uri)#">lucee-zero.jar</a>
-												<span class="triggerIcon pointer" style="color :##01798A" title='Lucee Jar file without any Extensions bundled or doc and admin bundles, "Lucee zero"'>
+												<span class="triggerIcon" title='Lucee Jar file without any Extensions bundled or doc and admin bundles, "Lucee zero"'>
 													<span class="glyphicon glyphicon-info-sign"></span>
 												</span>
 											</div>
@@ -707,7 +705,7 @@
 
 										<div class="fontStyle">
 											<a href="#(uri)#">Core</a>
-											<span class="triggerIcon pointer" style="color :##01798A" title='#stcLang.core#'>
+											<span class="triggerIcon" title='#stcLang.core#'>
 												<span class="glyphicon glyphicon-info-sign"></span>
 											</span>
 										</div>
@@ -722,7 +720,7 @@
 
 										<div class="fontStyle">
 											<a href="#(uri)#" title="#stcLang.war#">WAR</a>
-											<span class="triggerIcon pointer" style="color :##01798A" title="#stcLang.war#">
+											<span class="triggerIcon" title="#stcLang.war#">
 												<span class="glyphicon glyphicon-info-sign"></span>
 											</span>
 										</div>
@@ -870,7 +868,7 @@
 														<div class="textStyle textWrap row_alter<cfif ind MOD 2 eq 0>Even<cfelse>Odd</cfif>">
 															<a href="#cdnURLExt##el.filename#">#ver# (#lsDateFormat(el.date)#)</a>
 															<!---
-																<span  class="triggerIcon pointer" style="color :##01798A" title="">
+																<span  class="triggerIcon" title="">
 																	<span class="glyphicon glyphicon-info-sign"></span>
 																</span>
 															--->
@@ -878,7 +876,7 @@
 
 														<!--- show less --->
 														<cfif cnt EQ ind and len(uid)>
-															<div class="showLess pointer textStyle" style="text-align:center;background-color:##BCBCBC;" onclick="return hideData('#uid#_release');">
+															<div class="showLess textStyle" style="text-align:center;background-color:##BCBCBC;cursor:pointer;" onclick="return hideData('#uid#_release');">
 																<b><i>Show less</i></b>
 																<small class="align-middle h6 mb-0  hideClick">
 																	<i class="icon icon-collapse"></i>
