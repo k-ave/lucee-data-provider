@@ -529,7 +529,6 @@
 	</head>
 
 	<body class="container py-3">
-
 		<cfoutput>
 			<div class="bg-primary jumbotron text-white">
 				<h1 class="display-3">Downloads</h1>
@@ -541,316 +540,355 @@
 				or type EQ "abc"
 				or type EQ "beta"
 				or type EQ "rc">
-				
-				<cfif true>
 					
-					<h2>Lucee Server</h2>
-					<p style="font-size: 1.6rem;">Lucee Release Announcements, including changelogs are available via <a href="https://dev.lucee.org/c/news/release/8">Releases Category</a></p>
-					<p style="font-size: 1.6rem;">Extension updates and changelogs are posted under the <a href="https://dev.lucee.org/c/hacking/extensions/5">Extensions Category</a></p>
-					<p style="font-size: 1.6rem;">Official Lucee Docker images are available via <a href="https://hub.docker.com/r/lucee/lucee">Docker Hub</a></p>
-					<p style="font-size: 1.6rem;">Commandbox Lucee engines/releases are listed at <a href="https://www.forgebox.io/view/lucee">Forgebox</a></p>
-					<cfscript>
-						rows={};
-					</cfscript>
-					<div class="panel" id="core">
-						<cfset types="releases,snapshots,rc,beta">
-						<div class="panel-body">
-							<cfset _versions={}>
-							<cfloop list="releases,snapshots,rc,beta" item="_type">
-								<cfset _versions[_type]=[]>
-								<div class="col-md-3 col-sm-3 col-xs-3">
-									<!--- dropDown --->
-									<div class="bg-primary BoxWidth text-white">
-										<cfif !structKeyEXists(url,_type)>
-											<cfloop struct="#versions#" index="vs" item="data"><cfif data.type==_type><cfset url[_type]=vs><cfset rows[_type]=vs><cfbreak></cfif></cfloop>
-										</cfif>
-										<h2><b>#singular[_type]#</b></h2> <!--- #ldownloads[type].versionNoAppendix#</b> (#lsDateFormat(ldownloads[type].jarDate)#) --->
-										<select onchange="change('#_type#',this, 'core')" style="color:##7f8c8d;font-style:normal;" id="lCore" class="form-control" <!--- class="custom-select" --->>
-											<cfloop struct="#versions#" index="vs" item="data"><cfif vs=="05.003.007.0044.100"><cfcontinue></cfif><cfif data.type==_type><option <cfif url[_type]==vs><cfset rows[_type]=vs> selected="selected"</cfif> value="#vs#"><!---
+				<h2>Lucee Server</h2>
+				<p style="font-size: 1.6rem;">Lucee Release Announcements, including changelogs are available via <a href="https://dev.lucee.org/c/news/release/8">Releases Category</a></p>
+				<p style="font-size: 1.6rem;">Extension updates and changelogs are posted under the <a href="https://dev.lucee.org/c/hacking/extensions/5">Extensions Category</a></p>
+				<p style="font-size: 1.6rem;">Official Lucee Docker images are available via <a href="https://hub.docker.com/r/lucee/lucee">Docker Hub</a></p>
+				<p style="font-size: 1.6rem;">Commandbox Lucee engines/releases are listed at <a href="https://www.forgebox.io/view/lucee">Forgebox</a></p>
 
-												---><cfset arrayAppend(_versions[_type],data.version)>#data.versionNoAppendix#</option></cfif></cfloop>
+				<cfset rows = {}>
+				<cfset types="releases,snapshots,rc,beta">
+				<cfset _versions={}>
 
-										</select>
-									</div>
-									<cfset dw=versions[rows[_type]]>
-									<!--- desc --->
-									<div class="desc descDiv row_even">
-										<cfset res=getDate(dw.version)>
-										<span style="font-weight:600">#dw.version#</span><cfif len(res)>
-	
-	<span style="font-size:12px">(#res#)</span></cfif><br><br>
+				<div class="panel" id="core">
+					<div class="panel-body">
+						<cfloop list="releases,snapshots,rc,beta" item="_type">
+							<cfset _versions[_type] = []>
+							<div class="col-md-3 col-sm-3 col-xs-3">
+								<!--- dropDown --->
+								<div class="bg-primary BoxWidth text-white">
 
-										#stcLang.desc[_type]#</div>
-									
-									<!--- Express --->
-									<cfif structKeyExists(dw,"express")><div class="row_odd divHeight">
-										<cfif doS3.express>
-											<cfset uri="#cdnURL##dw.express#">
-										<cfelse>
-											<cfset uri="#baseURL#express/#dw.version#">
-										</cfif>
+									<cfif !structKeyEXists(url,_type)>
+										<cfloop struct="#versions#" index="vs" item="data">
+											<cfif data.type != _type>
+												<cfcontinue>
+											</cfif>
+											<cfset url[_type]=vs>
+											<cfset rows[_type]=vs>
+											<cfbreak>
+										</cfloop>
+									</cfif>
+
+									<h2><b>#singular[_type]#</b></h2>
+									<select onchange="change('#_type#',this, 'core')" style="color:##7f8c8d;font-style:normal;" id="lCore" class="form-control">
+										<cfloop struct="#versions#" index="vs" item="data">
+											<cfif vs == "05.003.007.0044.100"
+												OR data.type != _type>
+												<cfcontinue>
+											</cfif>
+
+											<cfset isSelected = url[_type] == vs ? true : false>
+
+											<cfif isSelected>
+												<cfset rows[_type] = vs>
+											</cfif>
+
+											<cfset arrayAppend(_versions[_type], data.version)>
+
+											<option value="#vs#"#isSelected ? ' selected="selected"' : ''#>#data.versionNoAppendix#</option>
+										</cfloop>
+									</select>
+								</div>
+
+								<cfset dw = versions[rows[_type]]>
+
+								<!--- desc --->
+								<div class="desc descDiv row_even">
+									<cfset res=getDate(dw.version)>
+									<span style="font-weight:600">#dw.version#</span>
+									<cfif len(res)>
+										<span style="font-size:12px">(#res#)</span>
+									</cfif><br><br>
+									#stcLang.desc[_type]#
+								</div>
+								
+								<!--- Express --->
+								<cfif structKeyExists(dw,"express")>
+									<div class="row_odd divHeight">
+										<cfset uri = doS3.express ? "#cdnURL##dw.express#" : "#baseURL#express/#dw.version#">
+
 										<div class="fontStyle">
 											<a href="#uri#">Express</a>
 											<span  class="triggerIcon pointer" style="color :##01798A" title="#stcLang.express#">
 												<span class="glyphicon glyphicon-info-sign"></span>
 											</span>
 										</div>
-									</div></cfif>
-									<!--- Installer --->
-									<div class="row_even installerDiv">
-										<cfif _type == "releases">
-											
-											<cfif !structKeyExists(dw,"win") and !structKeyExists(dw,"lin32") and !structKeyExists(dw,"lin64")>
-												<cfif left(dw.version,1) GT 4>
-													<div class="fontStyle">
+									</div>
+								</cfif>
+
+								<!--- Installer --->
+								<div class="row_even installerDiv">
+									<cfif _type == "releases">
+										<cfif !structKeyExists(dw,"win")
+											and !structKeyExists(dw,"lin32")
+											and !structKeyExists(dw,"lin64")>
+
+											<cfif left(dw.version,1) GT 4>
+												<div class="fontStyle">
 													<span class="text-primary">Coming Soon!</span>
-													<span  class="triggerIcon pointer" style="color :##01798A" title="Installers will available on soon">
+													<span class="triggerIcon pointer" style="color :##01798A" title="Installers will available on soon">
 														<span class="glyphicon glyphicon-info-sign"></span>
 													</span>
-												</div></cfif>
-											<cfelse>
-												<cfset count=1>
-												<cfset str="">
-												<cfloop list="win,lin64,lin32" item="kk">
-													<cfif !structKeyExists(dw,kk)><cfcontinue></cfif>
-													<cfset uri="#cdnURL##dw[kk]#">
-													<cfif count GT 1>
-														<cfset str&='<br>'>
-													</cfif>
-													<cfset str&='<a href="#uri#">#stcLang.installer[kk]# Installer</a> <span  class="triggerIcon pointer" style="color :##01798A" title="#stcLang.installer[kk]# Installer">
-													<span class="glyphicon glyphicon-info-sign"></span>
-												</span>'>
-													<cfset count++>
-												</cfloop>
-												<div class="fontStyle">#str#</div>
+												</div>
 											</cfif>
+										<cfelse>
+											<cfset count=1>
+											<cfset str="">
+
+											<cfloop list="win,lin64,lin32" item="kk">
+												<cfif !structKeyExists(dw,kk)>
+													<cfcontinue>
+												</cfif>
+
+												<cfset uri="#cdnURL##dw[kk]#">
+												<cfif count GT 1>
+													<cfset str&='<br>'>
+												</cfif>
+
+												<cfset str &= '<a href="#uri#">#stcLang.installer[kk]# Installer</a>&nbsp;<span class="triggerIcon pointer" style="color :##01798A" title="#stcLang.installer[kk]# Installer"><span class="glyphicon glyphicon-info-sign"></span></span>'>
+												<cfset count++>
+											</cfloop>
+											<div class="fontStyle">#str#</div>
 										</cfif>
-									</div>
-									<!--- jar --->
+									</cfif>
+								</div>
+
+								<!--- jar --->
+								<cfif structKeyExists(dw,"jar") OR structKeyExists(dw,"light") OR structKeyExists(dw,"zero")>
 									<div class="row_odd jarDiv">
-											<cfif structKeyExists(dw,"jar")>
-											<cfif doS3.jar>
-												<cfset uri="#cdnURL##dw.jar#">
-											<cfelse>
-												<cfset uri="#baseURL#loader/#dw.version#">
-											</cfif>
-										
-											<div class="fontStyle"><a href="#(uri)#">lucee.jar</a><span  class="triggerIcon pointer" style="color :##01798A" title="#stcLang.jar#">
-												<span class="glyphicon glyphicon-info-sign"></span>
-											</span></div></cfif>
-											<cfif structKeyExists(dw,"light")>
-												<cfif doS3.light>
-													<cfset uri="#cdnURL##dw.light#">
-												<cfelse>
-													<cfset uri="#baseURL#light/#dw.version#">
-												</cfif>
-												
-												<div class="fontStyle"><a href="#(uri)#">lucee-light.jar</a><span  class="triggerIcon pointer" style="color :##01798A" title='Lucee Jar file without any Extensions bundled, "Lucee light"'>
-													<span class="glyphicon glyphicon-info-sign"></span>
-												</span></div>
-											</cfif>
-											<cfif structKeyExists(dw,"zero")>
-												<cfif doS3.zero>
-													<cfset uri="#cdnURL##dw.zero#">
-												<cfelse>
-													<cfset uri="#baseURL#zero/#dw.version#">
-												</cfif>
-												
-												<div class="fontStyle"><a href="#(uri)#">lucee-zero.jar</a><span  class="triggerIcon pointer" style="color :##01798A" title='Lucee Jar file without any Extensions bundled or doc and admin bundles, "Lucee zero"'>
-													<span class="glyphicon glyphicon-info-sign"></span>
-												</span></div>
-											</cfif>
+										<cfif structKeyExists(dw,"jar")>
+											<cfset uri = doS3.jar ? "#cdnURL##dw.jar#" : "#baseURL#loader/#dw.version#">
 
-
-									</div>
-									<!--- core --->
-									<cfif structKeyExists(dw,"lco")><div class="row_even divHeight">
-										<cfif doS3.lco>
-											<cfset uri="#cdnURL##dw.lco#">
-										<cfelse>
-											<cfset uri="#baseURL#core/#dw.version#">
-										</cfif>
-											
-										<div class="fontStyle"><a href="#(uri)#" >Core</a><span class="triggerIcon pointer" style="color :##01798A" title='#stcLang.core#'>
-												<span class="glyphicon glyphicon-info-sign"></span>
-											</span></div>
-									</div></cfif>
-									<!--- WAR --->
-									<cfif structKeyExists(dw,"war")><div class="row_odd divHeight">
-										<cfif doS3.war>
-											<cfset uri="#cdnURL##dw.war#">
-										<cfelse>
-											<cfset uri="#baseURL#war/#dw.version#">
-										</cfif>
-										
-										<div class="fontStyle"><a href="#(uri)#" title="#stcLang.war#">WAR</a><span class="triggerIcon pointer" style="color :##01798A" title="#stcLang.war#">
-												<span class="glyphicon glyphicon-info-sign"></span>
-											</span></div>
-									</div></cfif>
-									<!--- logs --->
-									<div class="row_even divHeight">
-											<cfscript>
-											loop array=_versions[_type] item="vv" index="i"{
-												if(vv==dw.version ) {
-													prevVersion=arrayIndexExists(_versions[_type],i+1)?_versions[_type][i+1]:"0.0.0.0";
-												}
-											}
-											changelog=getChangelog(prevVersion,dw.version);
-											if(isStruct(changelog))structDelete(changelog,prevVersion);
-											//dump(prevVersion);
-											//dump(dw.version);
-											//dump(changelog);
-											
-											</cfscript>
-											
-
-
-										<cfif isstruct(changelog) && structCount(changelog) GT 0>
 											<div class="fontStyle">
-												<p class="collapsed mb-0" data-toggle="modal" data-target="##myModal#_type#">Changelog<small class="align-middle h6 mb-0 ml-1"><i class="icon icon-collapse collapsed"></i></small></p>
+												<a href="#(uri)#">lucee.jar</a>
+												<span  class="triggerIcon pointer" style="color :##01798A" title="#stcLang.jar#">
+													<span class="glyphicon glyphicon-info-sign"></span>
+												</span>
 											</div>
-											<div class="modal fade" id="myModal#_type#" role="dialog">
-												<div class="modal-dialog modal-lg">
-													<div class="modal-content">
-														<div class="modal-header">
-															<button type="button" class="close" data-dismiss="modal">&times;</button>
-															<h4 class="modal-title"><b>Version-#dw.version# Changelogs</b></h4>
-														</div>
-														<div class="modal-body desc">
-															<cfset changelogTicketList = "">
-															<cfloop struct="#changelog#" index="ver" item="tickets">
-																<cfloop struct="#tickets#" index="id" item="subject">
-																	<cfif !listFindNoCase(changelogTicketList, id)>
-																		<a href="https://bugs.lucee.org/browse/#id#" target="blank">#id#</a>- #subject#
-																		<br>
-																		<cfset changelogTicketList = listAppend(changelogTicketList, id)>
-																	</cfif>
-															</cfloop></cfloop>
-														</div>
-														<div class="modal-footer">
-															<button type="button" class="btn btn-default btn-lg" data-dismiss="modal">Close</button>
-														</div>
-												  	</div>
+										</cfif>
+
+										<cfif structKeyExists(dw,"light")>
+											<cfset uri = doS3.light ? "#cdnURL##dw.light#" : "#baseURL#light/#dw.version#">
+
+											<div class="fontStyle">
+												<a href="#(uri)#">lucee-light.jar</a>
+												<span  class="triggerIcon pointer" style="color :##01798A" title='Lucee Jar file without any Extensions bundled, "Lucee light"'>
+													<span class="glyphicon glyphicon-info-sign"></span>
+												</span>
+											</div>
+										</cfif>
+
+										<cfif structKeyExists(dw,"zero")>
+											<cfset uri = doS3.zero ? "#cdnURL##dw.zero#" : "#baseURL#zero/#dw.version#">
+
+											<div class="fontStyle">
+												<a href="#(uri)#">lucee-zero.jar</a>
+												<span class="triggerIcon pointer" style="color :##01798A" title='Lucee Jar file without any Extensions bundled or doc and admin bundles, "Lucee zero"'>
+													<span class="glyphicon glyphicon-info-sign"></span>
+												</span>
+											</div>
+										</cfif>
+									</div>
+								</cfif>
+
+								<!--- core --->
+								<cfif structKeyExists(dw,"lco")>
+									<div class="row_even divHeight">
+
+										<cfset uri = doS3.lco ? "#cdnURL##dw.lco#" : "#baseURL#core/#dw.version#">
+
+										<div class="fontStyle">
+											<a href="#(uri)#">Core</a>
+											<span class="triggerIcon pointer" style="color :##01798A" title='#stcLang.core#'>
+												<span class="glyphicon glyphicon-info-sign"></span>
+											</span>
+										</div>
+									</div>
+								</cfif>
+
+								<!--- WAR --->
+								<cfif structKeyExists(dw,"war")>
+									<div class="row_odd divHeight">
+
+										<cfset uri = doS3.war ? "#cdnURL##dw.war#" : "#baseURL#war/#dw.version#">
+
+										<div class="fontStyle">
+											<a href="#(uri)#" title="#stcLang.war#">WAR</a>
+											<span class="triggerIcon pointer" style="color :##01798A" title="#stcLang.war#">
+												<span class="glyphicon glyphicon-info-sign"></span>
+											</span>
+										</div>
+									</div>
+								</cfif>
+
+								<!--- logs --->
+								<div class="row_even divHeight">
+
+									<cfscript>
+										loop array=_versions[_type] item="vv" index="i"{
+											if(vv != dw.version ) {
+												continue;
+											}
+											prevVersion=arrayIndexExists(_versions[_type],i+1)?_versions[_type][i+1]:"0.0.0.0";
+										}
+
+										changelog = getChangelog(prevVersion,dw.version);
+
+										if(isStruct(changelog)) {
+											structDelete(changelog,prevVersion);
+										}
+									</cfscript>
+
+									<cfif isstruct(changelog) && structCount(changelog) GT 0>
+										<div class="fontStyle">
+											<p class="collapsed mb-0" data-toggle="modal" data-target="##myModal#_type#">Changelog<small class="align-middle h6 mb-0 ml-1"><i class="icon icon-collapse collapsed"></i></small></p>
+										</div>
+										<div class="modal fade" id="myModal#_type#" role="dialog">
+											<div class="modal-dialog modal-lg">
+												<div class="modal-content">
+													<div class="modal-header">
+														<button type="button" class="close" data-dismiss="modal">&times;</button>
+														<h4 class="modal-title"><b>Version-#dw.version# Changelogs</b></h4>
+													</div>
+													<div class="modal-body desc">
+														<cfset changelogTicketList = "">
+														<cfloop struct="#changelog#" index="ver" item="tickets">
+															<cfloop struct="#tickets#" index="id" item="subject">
+																<cfif listFindNoCase(changelogTicketList, id)>
+																	<cfcontinue>
+																</cfif>
+
+																<cfset changelogTicketList = listAppend(changelogTicketList, id)>
+
+																<a href="https://bugs.lucee.org/browse/#id#" target="blank">#id#</a>- #subject#<br>
+															</cfloop>
+														</cfloop>
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-default btn-lg" data-dismiss="modal">Close</button>
+													</div>
 												</div>
 											</div>
-										<cfelse>
-											<div class="fontStyle"></div>
+										</div>
+									<cfelse>
+										<div class="fontStyle"></div>
+									</cfif>
+								</div>
+								<div><hr></div>
+							</div>
+						</cfloop>
+					</div>
+				</div>
+
+				<cfset extQry = getExtensions(structKeyExists(url,"reset"))>
+				<div id="ext">
+					<h2>Extensions</h2>
+
+					<p style="font-size: 1.7rem;font-weight:normal;">Lucee Extensions, simply copy them to /lucee-server/deploy, of a running Lucee installation, to install them. You can also install this Extensions from within your Lucee Administrator under "Extension/Application".</p>
+
+					<cfloop query=extQry>
+
+						<cfif extQry.id=="1E12B23C-5B38-4764-8FF41B7FD9428468">
+							<cfcontinue>
+						</cfif>
+
+						<div class="container">
+							<div class="col-ms-12 col-xs-12 well well-sm">
+								<!--- title --->
+								<div class="permalinkHover"  id="#extQry.id#" >
+									<span class="head1 title">#extQry.name#
+										<span data-id="#extQry.id#" class="permalink">
+											<img src="test.ico">
+										</span>
+									</span>
+								</div>
+
+								<hr>
+
+								<!--- image --->
+								<div class='col-xs-2 col-md-2'>
+									<div>
+										<cfif len(extQry.image)>
+											<img style="max-width: 100%;" src="data:image/png;base64,#extQry.image#">
 										</cfif>
 									</div>
-									<div><hr></div><!--- --->
 								</div>
-							</cfloop>
+
+								<!--- description --->
+								<div class='col-md-10 col-xs-10'>
+									<div class="container bg-white mb-2" style="margin-left:-1.7%;">
+										<div class="head1 textStyle" style="font-size:2rem !important;"> 
+											ID: #extQry.id# 
+											<p class="fontStyle ml-2">#extQry.description#</p>
+										</div>
+									
+										<!--- downloads --->
+										<div class="row">
+											<!--- call extractVersions function once per extension rather than three times --->
+											<cfset exts=extractVersions(extQry)>
+											<cfloop list="release,abc,snapshot" item="type">
+												<cfif NOT structCount(exts[type])>
+													<cfcontinue>
+												</cfif>
+
+												<div class="mb-0 mt-1 col-xs-4 col-md-4 borderInfo">
+													<div class="bg-primary jumbotron text-white jumboStyle">
+														<span class="btn-primary">
+															<h2 class="fontSize">#multi[type]#</h2>
+														</span>
+													</div>
+
+													<cfset ind=0>
+													<cfset uid="">
+													<cfset cnt=structCount(exts[type])>
+
+													<cfloop struct="#exts[type]#" index="ver" item="el">
+														<cfset ind++>
+
+														<!--- show more --->
+														<cfif ind EQ 5 and cnt GT 6>
+															<cfset uid = createUniqueId()>
+															<div style="text-align:center;background-color:##BCBCBC;color:##2C3A47;" id="#uid#_release_id" class="collapse-toggle collapsed textStyle" onclick="return hideToggle('#uid#_release_id');"  data-toggle="collapse">
+																<b><i>Show more..</i></b>
+																<small class="align-middle h6 mb-0">
+																	<i class="icon icon-open"></i>
+																</small>
+															</div>
+															<!--- div for 'show more/showless' --->
+															<div class="clog-detail collapse #uid#_release row_alter" style="text-align:center;">
+														</cfif>
+
+														<!--- TODO: use css nth/child for zebra --->
+														<div class="textStyle textWrap row_alter<cfif ind MOD 2 eq 0>Even<cfelse>Odd</cfif>">
+															<a href="#cdnURLExt##el.filename#">#ver# (#lsDateFormat(el.date)#)</a>
+															<!--- <span  class="triggerIcon pointer" 
+															style="color :##01798A" title="">
+															<span class="glyphicon glyphicon-info-sign"></span>
+															</span>--->
+														</div>
+
+														<!--- show less --->
+														<cfif cnt EQ ind and len(uid)>
+															<div class="showLess pointer textStyle" style="text-align:center;background-color:##BCBCBC;" onclick="return hideData('#uid#_release');">
+																<b><i>Show less</i></b>
+																<small class="align-middle h6 mb-0  hideClick">
+																	<i class="icon icon-collapse"></i>
+																</small>
+															</div>
+															<!--- div for 'show more/showless' --->
+															</div>
+														</cfif>
+													</cfloop>
+												</div>
+											</cfloop>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
-					</div>
-
-<cfscript>
-	
-	extQry=getExtensions(structKeyExists(url,"reset"));
-</cfscript>
-<div id="ext">
-	<h2>Extensions</h2>
-						
-	<p style="font-size: 1.7rem;font-weight:normal;">Lucee Extensions, simply copy them to /lucee-server/deploy, of a running Lucee installation, to install them.
-	You can also install this Extensions from within your Lucee Administrator under "Extension/Application".</p>
-
-	<cfloop query=extQry>
-		<cfif extQry.id=="1E12B23C-5B38-4764-8FF41B7FD9428468">
-			<cfcontinue>
-		</cfif>
-	<div class="container">
-		<div class="col-ms-12 col-xs-12 well well-sm">
-			<!--- title --->
-			<div class="permalinkHover"  id="#extQry.id#" ><span class="head1 title">#extQry.name# <span data-id="#extQry.id#" class="permalink"><img src="test.ico"></span></span></div>
-			<hr>
-			<!--- image --->
-			<div class='col-xs-2 col-md-2'>
-				<div>
-				<cfif len(extQry.image)>
-					<img style="max-width: 100%;" src="data:image/png;base64,#extQry.image#">
-				</cfif>
-				</div>
-			</div>
-			<!--- description --->
-			<div class='col-md-10 col-xs-10'>
-				<div class="container bg-white mb-2" style="margin-left:-1.7%;">
-					<div class="head1 textStyle" style="font-size:2rem !important;"> 
-						ID: #extQry.id# 
-						<p class="fontStyle ml-2">#extQry.description#</p>
-					</div>
-				
-			<!--- downloads --->
-			<div class="row">
-			<!--- call extractVersions function once per extension rather than three times --->
-			<cfset exts=extractVersions(extQry)>
-			<cfloop list="release,abc,snapshot" item="type">
-				<cfif structCount(exts[type])>
-				<div class="mb-0 mt-1 col-xs-4 col-md-4 borderInfo">
-					<div class="bg-primary jumbotron text-white jumboStyle">
-						<span class="btn-primary">
-							<h2 class="fontSize">#multi[type]#</h2>
-						</span>
-					</div>
-					<cfset ind=0>
-					<cfset uid="">
-					<cfset cnt=structCount(exts[type])>
-					<cfloop struct="#exts[type]#" index="ver" item="el">
-					<cfset ind++>
-
-					<!--- show more --->
-					<cfif ind EQ 5 and cnt GT 6>
-						<cfset uid=createUniqueId()>
-						<div style="text-align:center;background-color:##BCBCBC;color:##2C3A47;" id="#uid#_release_id" class="collapse-toggle collapsed textStyle" onclick="return hideToggle('#uid#_release_id');"  data-toggle="collapse">
-						<b><i>Show more..</i></b>
-						<small class="align-middle h6 mb-0">
-							<i class="icon icon-open"></i>
-						</small>
-						</div>
-						<div  class="clog-detail collapse #uid#_release row_alter" style="text-align:center;">
-					</cfif>
-
-
-					<div <cfif ind MOD 2 eq 0>class="row_alterEven textStyle textWrap"<cfelse>class="row_alterOdd textStyle textWrap"</cfif>>
-						
-						<a href="#cdnURLExt##el.filename#">#ver# (#lsDateFormat(el.date)#)</a>
-						<!--- <span  class="triggerIcon pointer" 
-						style="color :##01798A" title="">
-						<span class="glyphicon glyphicon-info-sign"></span>
-						</span>--->
-
-					</div>
-
-					<!--- show less --->
-					<cfif cnt EQ ind and len(uid)>
-						<div class="showLess pointer textStyle" 
-						style="text-align:center;background-color:##BCBCBC;" onclick="return hideData('#uid#_release');">
-							<b><i>Show less</i></b>
-							<small class="align-middle h6 mb-0  hideClick">
-								<i class="icon icon-collapse"></i>
-							</small>
-						</div>
-					</div>
-					</cfif>
 					</cfloop>
-
-
-
-
-
 				</div>
-				</cfif>
-			</cfloop>
-			</div>
-
-
-		</div>
-	</div>
-	</div>
-	</div>	
-	</cfloop>
-</div>
-
-
-				</cfif>
 			</cfif>
 		</cfoutput>
 	</body>
