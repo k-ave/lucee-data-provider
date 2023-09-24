@@ -238,62 +238,7 @@ lang.installer.lin32="Linux (32b)";
 
 		data['versionNoAppendix']=data.version;
 	}
-
-
-	//dump(versions);abort;
-
 </cfscript>
-
-<cfhtmlhead>
-	<script crossorigin="anonymous" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-	<link href="/res/download.css" rel="stylesheet">
-</cfhtmlhead>
-<cfhtmlbody>
-<script src="/res/download.js"></script>
-</cfhtmlbody>
-<style rel="stylesheet">
-.data-content{ background-color: ##01798a; color: white; min-width: 100%; font-size: 14px; line-height: 15px;}
-
-.triggerIcon{color :##01798A !important;}
-.pointer {cursor: pointer;}
-.jumboStyle {padding: 0rem 0rem !important; border-radius : 0px !important; text-align: center !important;}
-.fontSize{font-size: 20px !important;}
-
-.BoxWidth { padding: 1rem 1rem 2rem 1rem; border-radius: 1%; padding-left: 6%;}
-.col-md-3{ padding-right: 8px !important; padding-left: 8px !important; }
-.desc{ padding: 8px; vertical-align: top; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"; font-size: 1.5rem; font-weight: 400; line-height: 1.5; color: ##212529; text-align: left;}
-.descDiv{min-height: 130px;}
-.installerDiv{min-height: 75px;}
-.jarDiv{min-height: 60px;}
-.divHeight{min-height: 36px;}
-.fontStyle { font-size: 16px !important; font-weight: normal !important;}
-.row_even { background-color: ##EBEBEB; padding: 1% 0 0 4%; }
-.row_odd { background-color: ##DADADA; padding: 1% 0 0 4%; }
-.borderInfo { border: 1px ridge ##C7C7C7 !important; padding-left: 0px !important; padding-right: 0px !important;background-color:##EBEBEB; }
-.well{background-color: white !important;}
-.popover-content{ padding: 0.5px 0px !important; }
-.popover.bottom .arrow:after { border-bottom-color: ##01798A !important; }
-.popover{ border: 2px solid ##01798a !important;}
-.popover-title{ padding: 4px 8px !important; }
-.row_alterEven{ background-color: ##EBEBEB; padding: 0% 0 0 4%; } 
-.row_alterOdd{ background-color: ##DADADA; padding: 0% 0 0 4%; }
-
-/*.TextStyle{ padding: 1%; font-family: "Segoe UI"; font-size: 1.25rem; font-weight: 600;}*/
-.TextStyle{ padding: 1%; font-family:  -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol" !important; font-size:1.5rem !important;font-weight: normal !important;}
-.head1{font-family: "Times New Roman", Times, serif; font-size: 2.5rem; font-weight: 503;}
-h2.fontSize{margin-bottom:-1.80rem !important;}
-.title{font-family:  -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol" !important;font-size: 28px !important;}
-.textWrap{text-align:center;overflow:hidden;white-space:nowrap;}
-@media only screen and (max-width: 1200px){
-.textWrap{text-align:center !important;overflow:auto !important;white-space:normal !important;}
-}
-@media only screen and (min-width: 1500px){
-.textWrap{text-align:center !important;overflow:auto !important;white-space:normal !important;}
-}
-
-</style>
 
 
 <!DOCTYPE html>
@@ -307,7 +252,203 @@ h2.fontSize{margin-bottom:-1.80rem !important;}
 		<link rel="apple-touch-icon" href="/res/images/logo.png">
 		<link rel="apple-touch-icon" sizes="72x72" href="/res/images/logo.png">
 		<link rel="apple-touch-icon" sizes="114x114" href="/res/images/logo.png">
-		<cfhtmlhead action="flush">
+
+		<script crossorigin="anonymous" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+		<link href="/res/download.css" rel="stylesheet">
+
+		<script src="/res/download.js" defer></script>
+
+		<script type="text/javascript">
+			$(document).ready(function () {
+				let isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/)
+				let isTouch = ('ontouchstart' in document.documentElement);
+				let mthd = isTouch ? 'click' : 'mouseenter';
+
+				$(".triggerIcon").popover({
+					trigger: "hover",
+					placement: "auto",
+					position: "relative",
+					html: true,
+					animation:false
+				})
+				.on(mthd, function () {
+					var _this = this;
+					if (isSafari) {
+						$('.popover').attr('style', 'max-width: 200px !important');
+						$('.popover-title').attr('style', 'max-width: 100px !important');
+					}
+					$(this).popover("show");
+				})
+				.on("mouseleave touchmove", function () {
+					var _this = this;
+					setTimeout(function () {
+						if (!$(".popover:hover").length) {
+							$(_this).popover("hide");
+						}
+					})
+				});
+
+				$('.permalink').each(function() {
+					let anchor = document.createElement('a');
+					anchor.href = '##' + $(this).attr('data-id');
+					$(this).wrapInner(anchor)
+				});
+				$('span.permalink').hide();
+				$('div.permalinkHover').hover(
+					function() { $(this).find('span.permalink').show(); },
+					function() { $(this).find('span.permalink').hide(); }
+				);
+			});
+
+			function hideData (a) {
+				$('.'+a).removeClass('show');
+				$('##'+a+'_id').show();
+			}
+			function hideToggle (a) {
+				$('##'+a).hide();
+			}
+			function change(type,field,id) {
+				window.location="?"+type+"="+field.value+"##"+id;
+			}
+		</script>
+
+		<style rel="stylesheet">
+			.data-content {
+				background-color: ##01798a;
+				color: white;
+				min-width: 100%;
+				font-size: 14px;
+				line-height: 15px;
+			}
+			.triggerIcon {
+				color: ##01798a !important;
+			}
+			.pointer {
+				cursor: pointer;
+			}
+			.jumboStyle {
+				padding: 0rem 0rem !important;
+				border-radius: 0px !important;
+				text-align: center !important;
+			}
+			.fontSize {
+				font-size: 20px !important;
+			}
+			.BoxWidth {
+				padding: 1rem 1rem 2rem 1rem;
+				border-radius: 1%;
+				padding-left: 6%;
+			}
+			.col-md-3 {
+				padding-right: 8px !important;
+				padding-left: 8px !important;
+			}
+			.desc {
+				padding: 8px;
+				vertical-align: top;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+				font-size: 1.5rem;
+				font-weight: 400;
+				line-height: 1.5;
+				color: ##212529;
+				text-align: left;
+			}
+			.descDiv {
+				min-height: 130px;
+			}
+			.installerDiv {
+				min-height: 75px;
+			}
+			.jarDiv {
+				min-height: 60px;
+			}
+			.divHeight {
+				min-height: 36px;
+			}
+			.fontStyle {
+				font-size: 16px !important;
+				font-weight: normal !important;
+			}
+			.row_even {
+				background-color: ##ebebeb;
+				padding: 1% 0 0 4%;
+			}
+			.row_odd {
+				background-color: ##dadada;
+				padding: 1% 0 0 4%;
+			}
+			.borderInfo {
+				border: 1px ridge ##c7c7c7 !important;
+				padding-left: 0px !important;
+				padding-right: 0px !important;
+				background-color: ##ebebeb;
+			}
+			.well {
+				background-color: white !important;
+			}
+			.popover-content {
+				padding: 0.5px 0px !important;
+			}
+			.popover.bottom .arrow:after {
+				border-bottom-color: ##01798a !important;
+			}
+			.popover {
+				border: 2px solid ##01798a !important;
+			}
+			.popover-title {
+				padding: 4px 8px !important;
+			}
+			.row_alterEven {
+				background-color: ##ebebeb;
+				padding: 0% 0 0 4%;
+			}
+			.row_alterOdd {
+				background-color: ##dadada;
+				padding: 0% 0 0 4%;
+			}
+			/*.TextStyle{ padding: 1%; font-family: "Segoe UI"; font-size: 1.25rem; font-weight: 600;}*/
+			.TextStyle, .textStyle {
+				padding: 1%;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+				font-size: 1.5rem !important;
+				font-weight: normal !important;
+			}
+			.head1 {
+				font-family: "Times New Roman", Times, serif;
+				font-size: 2.5rem;
+				font-weight: 503;
+			}
+			h2.fontSize {
+				margin-bottom: -1.8rem !important;
+			}
+			.title {
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+				font-size: 28px !important;
+			}
+			.textWrap {
+				text-align: center;
+				overflow: hidden;
+				white-space: nowrap;
+			}
+			@media only screen and (max-width: 1200px) {
+				.textWrap {
+					text-align: center !important;
+					overflow: auto !important;
+					white-space: normal !important;
+				}
+			}
+			@media only screen and (min-width: 1500px) {
+				.textWrap {
+					text-align: center !important;
+					overflow: auto !important;
+					white-space: normal !important;
+				}
+			}
+		</style>
+
+
 	</head>
 	<body class="container py-3">
 
@@ -326,48 +467,6 @@ h2.fontSize{margin-bottom:-1.80rem !important;}
 					<p style="font-size: 1.6rem;">Extension updates and changelogs are posted under the <a href="https://dev.lucee.org/c/hacking/extensions/5">Extensions Category</a></p>
 					<p style="font-size: 1.6rem;">Official Lucee Docker images are available via <a href="https://hub.docker.com/r/lucee/lucee">Docker Hub</a></p>
 					<p style="font-size: 1.6rem;">Commandbox Lucee engines/releases are listed at <a href="https://www.forgebox.io/view/lucee">Forgebox</a></p>
-					<script type="text/javascript">
-						$(document).ready(function () {
-							isSafari = !!navigator.userAgent.match(/Version\/[\d\.]+.*Safari/)
-							var isTouch = ('ontouchstart' in document.documentElement);
-							if(isTouch) var mthd = 'click';
-							else var mthd = 'mouseenter';
-							$('.triggerIcon').attr('class','pop').attr("popover-placement", "auto");
-							$(".pop").popover({
-								trigger: "hover",
-								placement: 'bottom',
-								position: 'relative',
-								html: true,
-								animation:false
-							})
-							.on(mthd, function () {
-								var _this = this;
-								if (isSafari) {
-									$('.popover').attr('style', 'max-width: 200px !important');
-									$('.popover-title').attr('style', 'max-width: 100px !important');
-								}
-								$(this).popover("show");
-							})
-							.on("mouseleave touchmove", function () {
-								var _this = this;
-								setTimeout(function () {
-									if (!$(".popover:hover").length) {
-										$(_this).popover("hide");
-									}
-								})
-							});
-						});
-						function hideData (a) {
-							$('.'+a).removeClass('show');
-							$('##'+a+'_id').show();
-						}
-						function hideToggle (a) {
-							$('##'+a).hide();
-						}
-						function change(type,field,id) {
-							window.location="?"+type+"="+field.value+"##"+id;
-						}
-					</script>
 					<cfscript>
 						rows={};
 					</cfscript>
@@ -384,7 +483,7 @@ h2.fontSize{margin-bottom:-1.80rem !important;}
 											<cfloop struct="#versions#" index="vs" item="data"><cfif data.type==_type><cfset url[_type]=vs><cfset rows[_type]=vs><cfbreak></cfif></cfloop>
 										</cfif>
 										<b><h2>#singular[_type]#</h2> <!--- #ldownloads[type].versionNoAppendix#</b> (#lsDateFormat(ldownloads[type].jarDate)#) --->
-										<select onchange="change('#_type#',this, 'core')" style="color:7f8c8d;font-style:normal;" id="lCore" class="form-control" <!--- class="custom-select" --->>
+										<select onchange="change('#_type#',this, 'core')" style="color:##7f8c8d;font-style:normal;" id="lCore" class="form-control" <!--- class="custom-select" --->>
 											<cfloop struct="#versions#" index="vs" item="data"><cfif vs=="05.003.007.0044.100"><cfcontinue></cfif><cfif data.type==_type><option <cfif url[_type]==vs><cfset rows[_type]=vs> selected="selected"</cfif> value="#vs#"><!---
 
 												---><cfset arrayAppend(_versions[_type],data.version)>#data.versionNoAppendix#</option></cfif></cfloop>
@@ -618,7 +717,7 @@ h2.fontSize{margin-bottom:-1.80rem !important;}
 					<!--- show more --->
 					<cfif ind EQ 5 and cnt GT 6>
 						<cfset uid=createUniqueId()>
-						<div style="text-align:center;background-color:##BCBCBC;color:2C3A47;" id="#uid#_release_id" class="collapse-toggle collapsed textStyle" onclick="return hideToggle('#uid#_release_id');"  data-toggle="collapse">
+						<div style="text-align:center;background-color:##BCBCBC;color:##2C3A47;" id="#uid#_release_id" class="collapse-toggle collapsed textStyle" onclick="return hideToggle('#uid#_release_id');"  data-toggle="collapse">
 						<b><i>Show more..</i></b>
 						<small class="align-middle h6 mb-0">
 							<i class="icon icon-open"></i>
@@ -671,20 +770,6 @@ h2.fontSize{margin-bottom:-1.80rem !important;}
 
 				</cfif>
 			</cfif>
-		<cfhtmlbody action="flush">
-		<script>
-			$('.permalink').each(function() {
-				var anchor = document.createElement('a')
-				anchor.href = '##' + $(this).attr('data-id')
-				$(this).wrapInner(anchor)
-			});
-			$('span.permalink').hide();
-			$('div.permalinkHover').hover(
-				function() { $(this).find('span.permalink').show(); },
-				function() { $(this).find('span.permalink').hide(); }
-			);
-		</script>
 	</body>
 </html>
 </cfoutput>
-	
