@@ -1,5 +1,5 @@
 <cfscript>
-	aryValidTypes = [
+	aryValidVersionTypes = [
 		"releases",
 		"snapshots",
 		"rc",
@@ -11,7 +11,7 @@
 	lstVersionExtensionTypes = "release,abc,snapshot";
 
 	param name="url.type" default="releases";
-	url.type = !arrayFind(aryValidTypes, url.type) ? "releases" : url.type;
+	url.type = !arrayFind(aryValidVersionTypes, url.type) ? "releases" : url.type;
 
 	doS3 = {
 		express : true,
@@ -277,7 +277,7 @@
 		try{
 			http url="https://release.lucee.org/rest/update/provider/getdate/"&arguments.version result="res";
 			res = trim(deserializeJson(res.fileContent));
-			application.mavenDates[version] = lsDateFormat(parseDateTime(res));
+			application.mavenDates[arguments.version] = lsDateFormat(parseDateTime(res));
 		} catch(e) {}
 
 		if(len(res) == 0) {
@@ -288,24 +288,23 @@
 	}
 
 	function getInfo(version, flush = false) {
-
-		if(!arguments.flush && !isNull(application.mavenInfo[version])) {
-			return application.mavenInfo[version] ?: "";
+		if(!arguments.flush && !isNull(application.mavenInfo[arguments.version])) {
+			return application.mavenInfo[arguments.version] ?: "";
 		}
 
 		var res = "";
 
 		try{
-			http url="https://release.lucee.org/rest/update/provider/info/"&version result="res";
+			http url="https://release.lucee.org/rest/update/provider/info/"&arguments.version result="res";
 			res = deserializeJson(res.fileContent);
-			application.mavenInfo[version] = res;
+			application.mavenInfo[arguments.version] = res;
 		} catch(e) {}
 
 		if(len(res) == 0) {
 			return "";
 		}
 
-		return application.mavenInfo[version] ?: "";
+		return application.mavenInfo[arguments.version] ?: "";
 	}
 
 	function getChangelog(versionFrom, versionTo, flush = false) {
