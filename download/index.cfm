@@ -1,26 +1,18 @@
 <cfscript>
-	aryValidVersionTypes = [
-		"releases",
-		"snapshots",
-		"rc",
-		"beta",
-		"abc"
-	];
-
+	lstValidVersionTypes = "releases,snapshots,rc,beta,abc";
 	lstVersionTypes = "releases,snapshots,rc,beta";
 	lstVersionExtensionTypes = "release,abc,snapshot";
 
 	param name="url.type" default="releases";
-	url.type = !arrayFind(aryValidVersionTypes, url.type) ? "releases" : url.type;
+	url.type = !listFind(lstValidVersionTypes, url.type) ? "releases" : url.type;
 
-	doS3 = {
-		express : true,
-		jar : true,
-		lco : true,
-		light : true,
-		zero : true,
-		war : true
-	};
+	// TODO: Should be done in REST?
+	aryVersionsToIgnore = [
+		'05.003.007.0044.100'
+	];
+	aryExtensionsToIgnore = [
+		'1E12B23C-5B38-4764-8FF41B7FD9428468'
+	];
 
 	stcLang = {
 		desc: {
@@ -68,6 +60,15 @@
 	cdnURL = "https://cdn.lucee.org/";
 	cdnURLExt = "https://ext.lucee.org/";
 
+	doS3 = {
+		express : true,
+		jar : true,
+		lco : true,
+		light : true,
+		zero : true,
+		war : true
+	};
+
 	/*
 	// not used
 	extcacheLiveSpanInMinutes = 1000;
@@ -90,6 +91,8 @@
 	structEach(versions, (key, value) => {
 		// snapshots, rc, beta, alpha or none (release)
 		var strVersionType = lCase(listLast(arguments.value.version, '-'));
+
+		arguments.value['type'] = '';
 
 		switch (strVersionType) {
 			case 'snapshot':
@@ -150,7 +153,7 @@
 		}
 
 		// first we get the current version
-		// if(variables.is(arguments.type,arguments.qry.version)) {
+		// if(variables.isVersionType(arguments.type,arguments.qry.version)) {
 		// 	data[arguments.qry.version]={'filename':arguments.qry.fileName,'date':arguments.qry.created};
 		// }
 
@@ -176,21 +179,21 @@
 
 		// sorts by version
 		arraySort(arrExt, function(e1, e2){
-			return compare(toSort(e2.version), toSort(e1.version));
+			return compare(variables.toSort(arguments.e2.version), variables.toSort(arguments.e1.version));
 		});
 
 		loop array=arrExt index="i" item="local.ext" {
-			if (variables.is("release",ext.version)) {
+			if (variables.isVersionType("release", ext.version)) {
 				data.release[ext.version] = {
 					'filename' : ext.filename,
 					'date' : ext.date
 				};
-			} else if (variables.is("abc",ext.version)) {
+			} else if (variables.isVersionType("abc", ext.version)) {
 				data.abc[ext.version] = {
 					'filename' : ext.filename,
 					'date' : ext.date
 				};
-			} else if (variables.is("snapshot",ext.version)) {
+			} else if (variables.isVersionType("snapshot", ext.version)) {
 				data.snapshot[ext.version] = {
 					'filename' : ext.filename,
 					'date' : ext.date
@@ -222,7 +225,7 @@
 		return rtn;
 	}
 
-	function is(type, val) {
+	function isVersionType(type, val) localmode=true {
 		if (arguments.type == "all" || arguments.type == "") {
 			return true;
 		}
@@ -275,7 +278,7 @@
 		var res = "";
 
 		try{
-			http url="https://release.lucee.org/rest/update/provider/getdate/"&arguments.version result="res";
+			http url="https://release.lucee.org/rest/update/provider/getdate/"&arguments.version result="res" timeout="5";
 			res = trim(deserializeJson(res.fileContent));
 			application.mavenDates[arguments.version] = lsDateFormat(parseDateTime(res));
 		} catch(e) {}
@@ -563,8 +566,8 @@
 										<cfif data.type != versiontype>
 											<cfcontinue>
 										</cfif>
-										<cfset url[versiontype]=vs>
-										<cfset rows[versiontype]=vs>
+										<cfset url[versiontype] = vs>
+										<cfset rows[versiontype] = vs>
 										<cfbreak>
 									</cfloop>
 								</cfif>
@@ -572,8 +575,8 @@
 								<h2><b>#stcLang.singular[versiontype]#</b></h2>
 								<select onchange="change('#versiontype#',this, 'core')" style="color:##7f8c8d;font-style:normal;" id="lCore" class="form-control">
 									<cfloop struct="#versions#" index="vs" item="data">
-										<cfif vs == "05.003.007.0044.100"
-											OR data.type != versiontype>
+
+										<cfif data.type != versiontype OR arrayFind(aryVersionsToIgnore, vs)>
 											<cfcontinue>
 										</cfif>
 
@@ -594,7 +597,7 @@
 
 							<!--- desc --->
 							<div class="desc descDiv row_even">
-								<cfset res=getDate(dw.version)>
+								<cfset res = getDate(dw.version)>
 								<span style="font-weight:600">#dw.version#</span>
 								<cfif len(res)>
 									<span style="font-size:12px">(#res#)</span>
@@ -729,7 +732,7 @@
 										if(vv != dw.version ) {
 											continue;
 										}
-										prevVersion=arrayIndexExists(_versions[versiontype],i+1)?_versions[versiontype][i+1]:"0.0.0.0";
+										prevVersion = arrayIndexExists(_versions[versiontype],i+1)?_versions[versiontype][i+1]:"0.0.0.0";
 									}
 
 									changelog = getChangelog(prevVersion,dw.version);
@@ -788,7 +791,7 @@
 
 				<cfloop query=extQry>
 
-					<cfif extQry.id=="1E12B23C-5B38-4764-8FF41B7FD9428468">
+					<cfif arrayFind(aryExtensionsToIgnore, extQry.id)>
 						<cfcontinue>
 					</cfif>
 
@@ -859,7 +862,7 @@
 														<div class="clog-detail collapse #uid#_release row_alter" style="text-align:center;">
 													</cfif>
 
-													<!--- TODO: use css nth/child for zebra --->
+													<!--- TODO: could be done with css nth/child --->
 													<div class="textStyle textWrap row_alter<cfif ind MOD 2 eq 0>Even<cfelse>Odd</cfif>">
 														<a href="#cdnURLExt##el.filename#">#ver# (#lsDateFormat(el.date)#)</a>
 														<!---
